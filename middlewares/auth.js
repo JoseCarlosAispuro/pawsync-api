@@ -1,16 +1,21 @@
-import {timingSafeEqual} from 'node:crypto'
+import jwt from "jsonwebtoken"
 
-const token = process.env.API_TOKEN
+const secret = process.env.JWT_SECRET
 
-const safeEqual = (a, b) => {
-    const bufferA = Buffer.from(a)
-    const bufferB = Buffer.from(b)
-
-    if (bufferA.length !== bufferB.length) {
-        return false
+const isUser = (token) => {
+    try {
+        const authUser = jwt.verify(token, secret, {algorithms: ['HS256']})
+        return {
+            error: false,
+            errorMessage: '',
+            value: authUser
+        }
+    } catch (error) {
+        return {
+            error: true,
+            errorMessage: error.name === 'TokenExpiredError' ? 'Token Expired' : 'Incorrect Token',
+            value: {}}
     }
-
-    return timingSafeEqual(bufferA, bufferB)
 }
 
 const auth = () => {
@@ -25,9 +30,13 @@ const auth = () => {
             return res.status(401).json({"error": "Authorization header bad formatted"})
         }
 
-        if(!safeEqual(token, authParts[1])) {
-            return res.status(401).json({"error": "Incorrect Authorization Token"})
+        const userValidated = isUser(authParts[1])
+
+        if(userValidated.error) {
+            return res.status(401).json({"error": userValidated.errorMessage})
         }
+
+        req.user = {id: userValidated.value.id}
 
         next();
     })

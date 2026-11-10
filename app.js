@@ -1,6 +1,6 @@
 import express from 'express'
 import { usersRouter } from './routes/users.routes.js'
-import auth from './middlewares/auth.js'
+import { authRouter } from './routes/auth.routes.js'
 
 const app = express()
 
@@ -17,6 +17,7 @@ app.use((req, res, next) => {
     next();
 })
 
+app.use('/auth', authRouter)
 app.use('/users', usersRouter)
 
 app.use((req, res) => {
@@ -28,7 +29,9 @@ app.use((err, req, res, next) => {
         res.status(err.status).json({"error": err.message})
         return
     }
+
     console.error(err)
+
     res.status(500).json({"error": "Internal server error"})
 })
 
