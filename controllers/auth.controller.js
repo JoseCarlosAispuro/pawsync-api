@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 import { getAccountByUsername, register } from "../src/data/auth.repository.js"
 
+const dummyHash = await bcrypt.hash('dummyHash', 10)
+
 const registerUser = async (req, res) => {
     const hashedPassword =  await bcrypt.hash(req.validated.body.password, 10)
 
@@ -20,8 +22,10 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     const existingUser = getAccountByUsername(req.validated.body.username)
+    const dummyPassword = 'testing'
 
     if(!existingUser) {
+        await bcrypt.compare(dummyPassword, dummyHash)
         res.status(401).json({"error": "Account credentials are incorrect"})
         return
     }
